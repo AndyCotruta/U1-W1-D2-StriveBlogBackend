@@ -77,10 +77,8 @@ authorsRouter.post("/checkEmail", (request, response) => {
     (author) => author.email === newAuthor.email
   );
   existingAuthor
-    ? response.send("An autthor with the same email already exists")
-    : authorsArray.push(newAuthor);
-  fs.writeFileSync(authorsJSONPath, JSON.stringify(authorsArray));
-  response.send(newAuthor);
+    ? response.send({ isEmailAlreadyInUse: true })
+    : response.send({ isEmailAlreadyInUse: false });
 });
 
 export default authorsRouter;

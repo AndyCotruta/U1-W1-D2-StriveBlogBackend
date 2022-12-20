@@ -18,7 +18,12 @@ const authorsRouter = express.Router(); //declaring the Router that connects our
 
 // 1. Create
 authorsRouter.post("/", (request, response) => {
-  const newAuthor = { ...request.body, createdAt: new Date(), id: uniqid() }; //new author is contained by the spreaded req body, and also serverGenerated values
+  const newAuthor = {
+    ...request.body,
+    createdAt: new Date(),
+    id: uniqid(),
+    author: `https://ui-avatars.com/api/?name=${request.body.firstName}+${request.body.lastName}`,
+  }; //new author is contained by the spreaded req body, and also serverGenerated values
   const authorsArray = JSON.parse(fs.readFileSync(authorsJSONPath)); //reading and assigning the JSON file according to the pathname
   authorsArray.push(newAuthor); //pushing the newAuthor to the previously declared array
   fs.writeFileSync(authorsJSONPath, JSON.stringify(authorsArray)); //writing to the pathname the JSON Array

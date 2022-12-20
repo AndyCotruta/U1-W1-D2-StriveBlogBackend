@@ -69,4 +69,18 @@ authorsRouter.delete("/:id", (request, response) => {
   response.status(204).send();
 });
 
+// 6. Create a new author with condition
+authorsRouter.post("/checkEmail", (request, response) => {
+  const newAuthor = { ...request.body, createdAt: new Date(), id: uniqid() };
+  const authorsArray = JSON.parse(fs.readFileSync(authorsJSONPath));
+  const existingAuthor = authorsArray.find(
+    (author) => author.email === newAuthor.email
+  );
+  existingAuthor
+    ? response.send("An autthor with the same email already exists")
+    : authorsArray.push(newAuthor);
+  fs.writeFileSync(authorsJSONPath, JSON.stringify(authorsArray));
+  response.send(newAuthor);
+});
+
 export default authorsRouter;

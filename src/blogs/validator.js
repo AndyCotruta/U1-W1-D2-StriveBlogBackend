@@ -26,6 +26,7 @@ export const checksBlogPostSchema = checkSchema(blogPostSchema);
 
 export const triggerBadRequest = (req, res, next) => {
   const errors = validationResult(req);
+  console.log(errors);
   console.log(errors.array);
 
   if (!errors.isEmpty()) {

@@ -3,13 +3,26 @@ import express, { response } from "express";
 import uniqid from "uniqid";
 import httpErrors from "http-errors";
 import { checksBlogPostSchema, triggerBadRequest } from "./validator.js";
-import { getBlogs, writeBlogs } from "../lib/fs-tools.js";
+import { getAuthors, getBlogs, writeBlogs } from "../lib/fs-tools.js";
 
 const blogsRouter = express.Router();
 
 const { NotFound, Unauthorized, BadRequest } = httpErrors;
 
 // ........................................CRUD operations..................................
+
+async function getBlogPostsWithAuthors() {
+  const blogPostsArray = await getBlogs();
+  const authors = await getAuthors();
+  const blogPostsWithAuthors = blogPostsArray.map((blogPost) => {
+    const targetAuthor = authors.find((a) => a.id === blogPost.author);
+    if (targetAuthor) {
+      blogPost.author = targetAuthor;
+    }
+    return blogPost;
+  });
+  return blogPostsWithAuthors;
+}
 
 // 1. Create blog
 blogsRouter.post(
@@ -23,7 +36,7 @@ blogsRouter.post(
         _id: uniqid(),
         createdAt: new Date(),
       };
-      const blogsArray = getBlogs();
+      const blogsArray = await getBlogs();
       blogsArray.push(newBlog);
       await writeBlogs(blogsArray);
       res
@@ -38,7 +51,7 @@ blogsRouter.post(
 // 2. Read all blogs
 blogsRouter.get("/", async (req, res, next) => {
   try {
-    const blogs = await getBlogs();
+    const blogs = await getBlogPostsWithAuthors();
     res.send(blogs);
   } catch (error) {
     next(error);

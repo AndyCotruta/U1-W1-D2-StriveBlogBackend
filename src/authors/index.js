@@ -13,7 +13,7 @@ authorsRouter.post("/", async (request, response) => {
     ...request.body,
     createdAt: new Date(),
     id: uniqid(),
-    author: `https://ui-avatars.com/api/?name=${request.body.firstName}+${request.body.lastName}`,
+    avatar: `https://ui-avatars.com/api/?name=${request.body.firstName}+${request.body.lastName}`,
   }; //new author is contained by the spreaded req body, and also serverGenerated values
   const authorsArray = await getAuthors(); //reading and assigning the JSON file according to the pathname
   authorsArray.push(newAuthor); //pushing the newAuthor to the previously declared array

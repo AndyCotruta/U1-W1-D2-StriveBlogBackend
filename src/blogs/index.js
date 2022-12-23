@@ -115,4 +115,16 @@ blogsRouter.delete("/:blogId", async (req, res, next) => {
   }
 });
 
+// 6. Add blog comments
+blogsRouter.post("/:id/comments", async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const blogsArray = await getBlogs();
+    console.log(req.body.comment);
+    res.send("We have received the comment");
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 export default blogsRouter;

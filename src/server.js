@@ -14,10 +14,26 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const server = express();
-const port = 3001;
+const port = process.env.PORT;
 const publicFolderPath = join(process.cwd(), "./public");
 
-server.use(cors());
+const whitelist = [
+  process.env.FE_DEVELOPMENT_URL,
+  process.env.FE_PRODUCTION_URL,
+];
+
+const corsOpts = {
+  origin: (origin, corsNext) => {
+    console.log("Current origin: " + origin);
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      corsNext(null, true);
+    } else {
+      corsNext(createHttpError(400, `Origin ${origin} is not allowed`));
+    }
+  },
+};
+
+server.use(cors(corsOpts));
 server.use(express.json());
 server.use(express.static(publicFolderPath));
 

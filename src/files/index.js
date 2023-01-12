@@ -1,6 +1,7 @@
 import express from "express";
 import httpErrors from "http-errors";
 import multer from "multer";
+import { pipeline } from "stream";
 import { extname, join } from "path";
 import {
   getAuthors,
@@ -10,6 +11,7 @@ import {
   writeAuthors,
   writeBlogs,
 } from "../lib/fs-tools.js";
+import { getPDFReadableStream } from "../lib/pdf-tools.js";
 
 const { NotFound, Unauthorized, BadRequest } = httpErrors;
 const filesRouter = express.Router();
@@ -81,5 +83,22 @@ filesRouter.post(
     }
   }
 );
+
+filesRouter.get("/blogs/pdf/:blogId", async (req, res, next) => {
+  try {
+    res.setHeader("Content-Disposition", "attachment; filename=blogpost.pdf");
+    const blogId = req.params.blogId;
+    const blogsArray = await getBlogs();
+    const blogIndex = blogsArray.findIndex((blog) => blog._id === blogId);
+
+    const source = getPDFReadableStream(blogsArray, blogIndex);
+    const destination = res;
+    pipeline(source, destination, (err) => {
+      if (err) console.log(err);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 export default filesRouter;

@@ -1,6 +1,8 @@
 import axios from "axios";
+import imageToBase64 from "image-to-base64";
 import PdfPrinter from "pdfmake";
 import striptags from "striptags";
+import pdfMake from "pdfmake";
 
 export const getPDFReadableStream = (blog) => {
   const fonts = {
@@ -26,9 +28,15 @@ export const getPDFReadableStream = (blog) => {
   //     const base64Image = `data:image/${extension};base64,${base64}`;
   //     imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
   //   }
+  let responseString = {};
+  const base64Image = imageToBase64(blog.cover).then(
+    (response) => (responseString = response)
+  );
+
+  const Image = `data:image/png;base64,${responseString}`;
+  const imagePart = { image: Image };
   const docDefinition = {
     content: [
-      //   imagePart,
       { text: blog.title, style: "header" },
       blog.content
         .split("<p>")

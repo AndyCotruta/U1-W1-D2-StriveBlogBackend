@@ -46,15 +46,11 @@ blogsRouter.post(
       const blog = req.body;
 
       await asyncPDFGeneration(blog);
-      // console.log(pdfPath);
-      // fs.readFile(pdfPath, async (err, email, data) => {
-      //   if (err) {
-      //     console.log(err);
-      //   } else if (data) {
-      //     await sendRegistrationEmail(email, data);
-      //   }
-      // });
-      await sendRegistrationEmail(email);
+
+      fs.readFile(pdfPath, async (err, data) => {
+        await sendRegistrationEmail(data, email);
+      });
+
       res
         .status(200)
         .send(`Blog with id ${newBlog._id} was created successfully`);

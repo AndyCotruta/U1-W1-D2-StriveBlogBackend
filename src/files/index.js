@@ -2,9 +2,11 @@ import express from "express";
 import httpErrors from "http-errors";
 import multer from "multer";
 import { pipeline } from "stream";
+import json2csv from "json2csv";
 import { extname, join } from "path";
 import {
   getAuthors,
+  getAuthorsAsReadableStream,
   getBlogs,
   saveAuthorsAvatar,
   saveBlogCoverImage,
@@ -99,6 +101,22 @@ filesRouter.get("/blogs/pdf/:blogId", async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
+  }
+});
+
+filesRouter.get("/authorsCSV", async (req, res, next) => {
+  try {
+    res.setHeader("Content-Disposition", "attachment; filename=authors.csv");
+    const source = getAuthorsAsReadableStream();
+    const transform = new json2csv.Transform({
+      fields: ["firstName", "lastName", "email"],
+    });
+    const destination = res;
+    pipeline(source, transform, destination, (err) => {
+      if (err) console.log(err);
+    });
+  } catch (error) {
+    next(error);
   }
 });
 

@@ -14,21 +14,21 @@ export const getPDFReadableStream = (blog) => {
 
   const printer = new PdfPrinter(fonts);
 
-  let imagePart = {};
-  if (blog.cover) {
-    const response = axios.get(blog.cover, {
-      responseType: "arraybuffer",
-    });
-    const blogCoverURLParts = blog.cover.split("/");
-    const fileName = blogCoverURLParts[blogCoverURLParts.length - 1];
-    const [id, extension] = fileName.split(".");
-    const base64 = response.data.toString("base64");
-    const base64Image = `data:image/${extension};base64,${base64}`;
-    imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
-  }
+  //   let imagePart = {};
+  //   if (blog.cover) {
+  //     const response = axios.get(blog.cover, {
+  //       responseType: "arraybuffer",
+  //     });
+  //     const blogCoverURLParts = blog.cover.split("/");
+  //     const fileName = blogCoverURLParts[blogCoverURLParts.length - 1];
+  //     const [id, extension] = fileName.split(".");
+  //     const base64 = response.data.toString("base64");
+  //     const base64Image = `data:image/${extension};base64,${base64}`;
+  //     imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
+  //   }
   const docDefinition = {
     content: [
-      imagePart,
+      //   imagePart,
       { text: blog.title, style: "header" },
       blog.content
         .split("<p>")

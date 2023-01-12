@@ -4,6 +4,7 @@ import uniqid from "uniqid";
 import httpErrors from "http-errors";
 import { checksBlogPostSchema, triggerBadRequest } from "./validator.js";
 import { getAuthors, getBlogs, writeBlogs } from "../lib/fs-tools.js";
+import { sendRegistrationEmail } from "../lib/email-tools.js";
 
 const blogsRouter = express.Router();
 
@@ -39,6 +40,9 @@ blogsRouter.post(
       const blogsArray = await getBlogs();
       blogsArray.push(newBlog);
       await writeBlogs(blogsArray);
+      const { email } = req.body;
+      console.log(email);
+      await sendRegistrationEmail(email);
       res
         .status(200)
         .send(`Blog with id ${newBlog._id} was created successfully`);

@@ -47,6 +47,7 @@ blogsRouter.post(
         .status(200)
         .send(`Blog with id ${newBlog._id} was created successfully`);
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }

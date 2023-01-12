@@ -1,6 +1,6 @@
 import sgMail from "@sendgrid/mail";
 
-const key = process.env.SENDGRID_KEY;
+const key = process.env.SENDGRID_API_KEY;
 console.log(key);
 sgMail.setApiKey(key);
 

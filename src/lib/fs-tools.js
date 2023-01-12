@@ -1,7 +1,7 @@
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs-extra";
-import { createReadStream } from "fs";
+import { createReadStream, createWriteStream } from "fs";
 
 const { writeFile, readJSON, writeJSON } = fs;
 
@@ -11,6 +11,7 @@ export const dataFolderPath = join(
 );
 export const usersAvatarImagesPath = join(process.cwd(), "./public/usersImgs");
 export const coverImagesPath = join(process.cwd(), "./public/blogsCoversImgs");
+export const pdfPath = join(dataFolderPath, "test.pdf");
 
 const authorsJSONPath = join(dataFolderPath, "authors.json");
 const blogsJSONPath = join(dataFolderPath, "blogs.json");
@@ -29,3 +30,6 @@ export const saveBlogCoverImage = (fileName, coverAsBuffer) =>
 
 export const getAuthorsAsReadableStream = () =>
   createReadStream(authorsJSONPath);
+
+export const getPDFWritableStream = (filename) =>
+  createWriteStream(join(dataFolderPath, filename));

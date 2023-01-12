@@ -1,10 +1,12 @@
 import express, { response } from "express";
-
+import fs from "fs";
 import uniqid from "uniqid";
 import httpErrors from "http-errors";
 import { checksBlogPostSchema, triggerBadRequest } from "./validator.js";
-import { getAuthors, getBlogs, writeBlogs } from "../lib/fs-tools.js";
+import { getAuthors, getBlogs, pdfPath, writeBlogs } from "../lib/fs-tools.js";
 import { sendRegistrationEmail } from "../lib/email-tools.js";
+import { asyncPDFGeneration } from "../lib/pdf-tools.js";
+import fsTools from "fs-tools";
 
 const blogsRouter = express.Router();
 
@@ -41,7 +43,17 @@ blogsRouter.post(
       blogsArray.push(newBlog);
       await writeBlogs(blogsArray);
       const { email } = req.body;
-      console.log(email);
+      const blog = req.body;
+
+      await asyncPDFGeneration(blog);
+      // console.log(pdfPath);
+      // fs.readFile(pdfPath, async (err, email, data) => {
+      //   if (err) {
+      //     console.log(err);
+      //   } else if (data) {
+      //     await sendRegistrationEmail(email, data);
+      //   }
+      // });
       await sendRegistrationEmail(email);
       res
         .status(200)

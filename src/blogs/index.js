@@ -6,7 +6,7 @@ import { checksBlogPostSchema, triggerBadRequest } from "./validator.js";
 import { getAuthors, getBlogs, pdfPath, writeBlogs } from "../lib/fs-tools.js";
 import { sendRegistrationEmail } from "../lib/email-tools.js";
 import { asyncPDFGeneration } from "../lib/pdf-tools.js";
-import fsTools from "fs-tools";
+import BlogsModel from "./model.js";
 
 const blogsRouter = express.Router();
 
@@ -28,45 +28,33 @@ async function getBlogPostsWithAuthors() {
 }
 
 // 1. Create blog
-blogsRouter.post(
-  "/",
-  checksBlogPostSchema,
-  triggerBadRequest,
-  async (req, res, next) => {
-    try {
-      const newBlog = {
-        ...req.body,
-        _id: uniqid(),
-        createdAt: new Date(),
-      };
-      const blogsArray = await getBlogs();
-      blogsArray.push(newBlog);
-      await writeBlogs(blogsArray);
-      const { email } = req.body;
-      const blog = req.body;
+blogsRouter.post("/", async (req, res, next) => {
+  try {
+    const newBlog = new BlogsModel(req.body);
+    const { _id } = await newBlog.save();
+    const { email } = req.body;
+    const blog = req.body;
 
-      await asyncPDFGeneration(blog);
+    await asyncPDFGeneration(blog);
 
-      fs.readFile(pdfPath, async (err, data) => {
-        await sendRegistrationEmail(data, email);
-      });
+    fs.readFile(pdfPath, async (err, data) => {
+      await sendRegistrationEmail(data, email);
+    });
 
-      res
-        .status(200)
-        .send(`Blog with id ${newBlog._id} was created successfully`);
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
+    res.status(200).send(`Blog with id ${_id} was created successfully`);
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-);
+});
 
 // 2. Read all blogs
 blogsRouter.get("/", async (req, res, next) => {
   try {
-    const blogs = await getBlogPostsWithAuthors();
+    const blogs = await BlogsModel.find();
     res.send(blogs);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 });
@@ -75,8 +63,7 @@ blogsRouter.get("/", async (req, res, next) => {
 blogsRouter.get("/:blogId", async (req, res, next) => {
   try {
     const blogId = req.params.blogId;
-    const blogsArray = await getBlogs();
-    const searchedBlog = blogsArray.find((blog) => blog._id === blogId);
+    const searchedBlog = await BlogsModel.findById(blogId);
     if (searchedBlog) {
       res.send(searchedBlog);
     } else {
@@ -91,22 +78,17 @@ blogsRouter.get("/:blogId", async (req, res, next) => {
 blogsRouter.put("/:blogId", async (req, res, next) => {
   try {
     const blogId = req.params.blogId;
-    const blogsArray = await getBlogs();
-    const oldBlogIndex = blogsArray.findIndex((blog) => blog._id === blogId);
-    if (oldBlogIndex !== -1) {
-      const oldBlog = blogsArray[oldBlogIndex];
-      const updatedBlog = {
-        ...oldBlog,
-        ...req.body,
-        updatedAt: new Date(),
-      };
-      blogsArray[oldBlogIndex] = updatedBlog;
-      await writeBlogs(blogsArray);
-      res.send(updatedBlog);
+    const updatedUser = await BlogsModel.findByIdAndUpdate(blogId, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (updatedUser) {
+      res.send(updatedUser);
     } else {
       next(NotFound(`Blog with id ${blogId} not found`));
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 });
@@ -115,15 +97,14 @@ blogsRouter.put("/:blogId", async (req, res, next) => {
 blogsRouter.delete("/:blogId", async (req, res, next) => {
   try {
     const blogId = req.params.blogId;
-    const blogsArray = await getBlogs();
-    const filteredBlogsArray = blogsArray.filter((blog) => blog._id !== blogId);
-    if (filteredBlogsArray.length !== blogsArray.length) {
-      await writeBlogs(filteredBlogsArray);
-      res.status(204).send();
+    const deletedUser = await BlogsModel.findByIdAndDelete(blogId);
+    if (deletedUser) {
+      res.status(204).send(`Blog with id ${blogId} was deleted succesfully`);
     } else {
       next(NotFound(`Blog with id ${blogId} not found`));
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 });

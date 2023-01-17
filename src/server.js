@@ -11,7 +11,7 @@ import {
 } from "./errorHandlers.js";
 import filesRouter from "./files/index.js";
 import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 
 const server = express();
 const port = process.env.PORT;
@@ -50,7 +50,12 @@ server.use(unauthorizedHandler); // 401
 server.use(notFoundHandler); // 404
 server.use(genericErrorHandler); // 500
 
-server.listen(port, () => {
-  console.table(listEndpoints(server));
-  console.log("Server listening on port " + port);
+mongoose.connect(process.env.MONGODB_URL);
+
+mongoose.connection.on("connected", () => {
+  console.log("Connection established to Mongo");
+  server.listen(port, () => {
+    console.table(listEndpoints(server));
+    console.log("Server listening on port " + port);
+  });
 });

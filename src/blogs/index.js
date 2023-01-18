@@ -7,6 +7,7 @@ import { getAuthors, getBlogs, pdfPath, writeBlogs } from "../lib/fs-tools.js";
 import { sendRegistrationEmail } from "../lib/email-tools.js";
 import { asyncPDFGeneration } from "../lib/pdf-tools.js";
 import BlogsModel from "./model.js";
+import { request } from "http";
 
 const blogsRouter = express.Router();
 
@@ -113,11 +114,111 @@ blogsRouter.delete("/:blogId", async (req, res, next) => {
 blogsRouter.post("/:id/comments", async (req, res, next) => {
   try {
     const id = req.params.id;
-    const blogsArray = await getBlogs();
-    console.log(req.body.comment);
-    res.send("We have received the comment");
+    const newComment = { ...req.body, timestamps: true };
+    const updatedBlog = await BlogsModel.findByIdAndUpdate(
+      id,
+      { $push: { comments: newComment } },
+      { new: true, runValidators: true }
+    );
+    if (updatedBlog) {
+      res.send(updatedBlog);
+    } else {
+      next(NotFound(`Blog with id ${id} not found`));
+    }
   } catch (error) {
     console.log(error);
+  }
+});
+
+// 7. Get all comments for a blog
+blogsRouter.get("/:id/comments", async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const blog = await BlogsModel.findById(id);
+    if (blog) {
+      res.send(blog.comments);
+    } else {
+      next(NotFound(`Blog with id ${id} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// 8. Get comment by id
+
+blogsRouter.get("/:id/comments/:commentId", async (req, res, next) => {
+  try {
+    const blogId = req.params.id;
+    const commentId = req.params.commentId;
+    const blog = await BlogsModel.findById(blogId);
+    if (blog) {
+      const comment = blog.comments.find(
+        (comment) => comment._id.toString() === commentId
+      );
+      if (comment) {
+        res.send(comment);
+      } else {
+        next(NotFound(`Comment with id ${commentId} not found`));
+      }
+    } else {
+      next(NotFound(`Blog with id ${blogId} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// 9. Update comment by ID
+
+blogsRouter.put("/:id/comments/:commentId", async (req, res, next) => {
+  try {
+    const blogId = req.params.id;
+    const commentId = req.params.commentId;
+    const blog = await BlogsModel.findById(blogId);
+    if (blog) {
+      const index = blog.comments.findIndex(
+        (comment) => comment._id.toString() === commentId
+      );
+      if (index !== -1) {
+        blog.comments[index] = {
+          ...blog.comments[index].toObject(),
+          ...req.body,
+        };
+        await blog.save();
+        res.send(blog);
+      } else {
+        next(NotFound(`Comment with id ${commentId} not found`));
+      }
+    } else {
+      next(NotFound(`Blog with id ${blogId} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+// 10. Delete comment by ID
+blogsRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
+  try {
+    const blogId = req.params.id;
+    const commentId = req.params.commentId;
+    const updatedBlog = await BlogsModel.findByIdAndUpdate(
+      blogId,
+      { $pull: { comments: { _id: commentId } } },
+      { new: true }
+    );
+    if (updatedBlog) {
+      res.send(updatedBlog);
+    } else {
+      next(NotFound(`Blog with id ${blogId} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 });
 

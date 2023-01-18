@@ -2,11 +2,14 @@ import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-const commentsSchema = new Schema({
-  name: { type: String, required: true },
-  title: { type: String, required: true },
-  text: { type: String, required: true },
-});
+const commentsSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    title: { type: String, required: true },
+    text: { type: String, required: true },
+  },
+  { timestamps: true }
+);
 
 const blogsSchema = new Schema(
   {

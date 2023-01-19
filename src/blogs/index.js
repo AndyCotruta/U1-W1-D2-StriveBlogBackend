@@ -8,6 +8,7 @@ import { sendRegistrationEmail } from "../lib/email-tools.js";
 import { asyncPDFGeneration } from "../lib/pdf-tools.js";
 import BlogsModel from "./model.js";
 import { request } from "http";
+import q2m from "query-to-mongo";
 
 const blogsRouter = express.Router();
 
@@ -52,8 +53,15 @@ blogsRouter.post("/", async (req, res, next) => {
 // 2. Read all blogs
 blogsRouter.get("/", async (req, res, next) => {
   try {
+    const mongoQuery = q2m(req.query);
+    const { total, books } = await BlogsModel.findBlogsWithAuthors(mongoQuery);
     const blogs = await BlogsModel.find();
-    res.send(blogs);
+    res.send({
+      links: mongoQuery.links("http://localhost:3001/blogs", total),
+      total,
+      totalPages: Math.ceil(total / mongoQuery.options.limit),
+      blogs,
+    });
   } catch (error) {
     console.log(error);
     next(error);
@@ -64,7 +72,10 @@ blogsRouter.get("/", async (req, res, next) => {
 blogsRouter.get("/:blogId", async (req, res, next) => {
   try {
     const blogId = req.params.blogId;
-    const searchedBlog = await BlogsModel.findById(blogId);
+    const searchedBlog = await BlogsModel.findById(blogId).populate({
+      path: "authors",
+      select: "firstName lastName email",
+    });
     if (searchedBlog) {
       res.send(searchedBlog);
     } else {

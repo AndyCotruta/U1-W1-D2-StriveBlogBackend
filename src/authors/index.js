@@ -1,5 +1,6 @@
 import express from "express";
 import fs from "fs";
+import AuthorsModel from "./model.js";
 
 import uniqid from "uniqid";
 import { getAuthors, writeAuthors } from "../lib/fs-tools.js";
@@ -8,64 +9,85 @@ import { getAuthors, writeAuthors } from "../lib/fs-tools.js";
 const authorsRouter = express.Router(); //declaring the Router that connects our operations to the server
 
 // 1. Create
-authorsRouter.post("/", async (request, response) => {
-  const newAuthor = {
-    ...request.body,
-    createdAt: new Date(),
-    id: uniqid(),
-    avatar: `https://ui-avatars.com/api/?name=${request.body.firstName}+${request.body.lastName}`,
-  }; //new author is contained by the spreaded req body, and also serverGenerated values
-  const authorsArray = await getAuthors(); //reading and assigning the JSON file according to the pathname
-  authorsArray.push(newAuthor); //pushing the newAuthor to the previously declared array
-  await writeAuthors(authorsArray); //writing to the pathname the JSON Array
-  response.status(200).send({ id: newAuthor.id }); //sending back the response
+authorsRouter.post("/", async (req, res, next) => {
+  try {
+    const newAuthor = new AuthorsModel(req.body);
+    const { _id } = await newAuthor.save();
+    res.status(201).send({ _id });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 // 2. Read
-authorsRouter.get("/", async (request, response) => {
-  const authors = await getAuthors();
-  response.send(authors); //sending the JSON body
+authorsRouter.get("/", async (req, res, next) => {
+  try {
+    const authors = await AuthorsModel.find();
+    res.send(authors); //sending the JSON body
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 // 3. Read individual author
-authorsRouter.get("/:id", async (request, response) => {
-  const authorId = request.params.id; //reading params from the URL
-  const authorsArray = await getAuthors(); //reading and assigning the JSON file according to the pathname
-  const searchedAuthor = authorsArray.find((author) => author.id === authorId); //retrieves the OBJ of the array that corresponds to the criteria
-  response.send(searchedAuthor); //sends back the response
+authorsRouter.get("/:id", async (req, res, next) => {
+  try {
+    const authorId = req.params.id;
+    const searchedAuthor = await AuthorsModel.findById(authorId);
+    if (searchedAuthor) {
+      res.send(searchedAuthor);
+    } else {
+      next(NotFound(`Author with id ${authorId} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 // 4. Update
-authorsRouter.put("/:id", async (request, response) => {
-  const authorId = request.params.id; //reading params from the URL
-  const authorsArray = await getAuthors(); //reading and assigning the JSON file according to the pathname
-  const oldAuthorIndex = authorsArray.findIndex(
-    (author) => author.id === authorId
-  ); //retrieves the index corresponding to the user's passed ID
-  const oldAuthor = authorsArray[oldAuthorIndex]; //assigning the correct old author based on the previously found index
-  const updatedAuthor = {
-    ...oldAuthor,
-    ...request.body,
-    updatedAt: new Date(),
-  }; //updating the old OBJ body with the req body, adding server generated values
-  authorsArray[oldAuthorIndex] = updatedAuthor; //updating the array at correct index with the new OBJ
-  await writeAuthors(authorsArray); //writing the new JSON file with the updated Array
-  response.send(updatedAuthor); //sends back the updated version of the oldAuthor
+authorsRouter.put("/:id", async (req, res, next) => {
+  try {
+    const authorId = req.params.id;
+    const updatedAuthor = await AuthorsModel.findByIdAndUpdate(
+      authorId,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    if (updatedAuthor) {
+      res.send(updatedAuthor);
+    } else {
+      next(NotFound(`Author with id ${authorId} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 // 5.DELETE
-authorsRouter.delete("/:id", async (request, response) => {
-  const authorId = request.params.id; //reading params from the URL
-  const authorsArray = await getAuthors(); //reading and assigning the JSON file according to the pathname
-  const filteredAuthorsArray = authorsArray.filter(
-    (author) => author.id !== authorId
-  ); //returns a new array of authors just with authors that don't have the id equal to the passed authorId (aka deletes the corresponding author)
-  await writeAuthors(filteredAuthorsArray); //writing the new JSON file with the new filtered Array
-  response.status(204).send(); //response just with status
+authorsRouter.delete("/:id", async (req, res, next) => {
+  try {
+    const authorId = req.params.id;
+    const deletedAuthor = await AuthorsModel.findByIdAndDelete(authorId);
+    if (deletedAuthor) {
+      res.status(204).send();
+    } else {
+      next(NotFound(`Author with id ${authorId} not found`));
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
 });
 
 // 6. Create a new author with condition
-authorsRouter.post("/checkEmail", async (request, response) => {
+authorsRouter.post("/checkEmail", async (req, res, next) => {
   const newAuthor = { ...request.body, createdAt: new Date(), id: uniqid() }; //assigning to a new OBJ the values from req body
   const authorsArray = await getAuthors(); //reading and assigning the JSON file according to the pathname
   const existingAuthor = authorsArray.find(

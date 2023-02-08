@@ -21,7 +21,9 @@
   "homepage": "https://github.com/AndyCotruta/U1-W1-D5-SoloProject-MarketPlace-Backend#readme",
   "dependencies": {
     "@sendgrid/mail": "^7.7.0",
+    "atob": "^2.1.2",
     "axios": "^1.2.2",
+    "bcrypt": "^5.1.0",
     "cloudinary": "^1.33.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",

@@ -8,6 +8,7 @@ import {
   notFoundHandler,
   badRequestHandler,
   unauthorizedHandler,
+  forbiddenErrorHandler,
 } from "./errorHandlers.js";
 import filesRouter from "./files/index.js";
 import { join, dirname } from "path";
@@ -47,6 +48,7 @@ server.use("", filesRouter);
 
 server.use(badRequestHandler); // 400
 server.use(unauthorizedHandler); // 401
+server.use(forbiddenErrorHandler); //403
 server.use(notFoundHandler); // 404
 server.use(genericErrorHandler); // 500
 

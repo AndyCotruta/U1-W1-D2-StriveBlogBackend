@@ -7,15 +7,19 @@ import uniqid from "uniqid";
 import { getAuthors, writeAuthors } from "../lib/fs-tools.js";
 import { basicAuthMiddleware } from "../lib/basicAuth.js";
 import { adminOnlyMiddleware } from "../lib/adminOnly.js";
+import { createAccessToken } from "../lib/authTools.js";
+import createHttpError from "http-errors";
+import { JWTAuthMiddleware } from "../lib/jwtAuth.js";
 
 // ..........................................Creating CRUD operations...............................
 const authorsRouter = express.Router(); //declaring the Router that connects our operations to the server
 
 // /me ENDPOINTS................................................................
 
-authorsRouter.get("/me", basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    res.send(req.author);
+    const author = await AuthorsModel.findById(req.author._id);
+    res.send(author);
   } catch (error) {
     next(error);
   }
@@ -71,6 +75,35 @@ authorsRouter.post("/", async (req, res, next) => {
     res.status(201).send(`Author with ID ${_id} was created successfully`);
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+});
+
+authorsRouter.post("/register", async (req, res, next) => {
+  try {
+    const newAuthor = new AuthorsModel(req.body);
+    const { _id } = await newAuthor.save();
+    res.status(201).send(`Author with ID ${_id} was created successfully`);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+authorsRouter.post("/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const author = await AuthorsModel.checkCredentials(email, password);
+
+    if (author) {
+      const payload = { _id: author._id, role: author.role };
+
+      const accessToken = await createAccessToken(payload);
+      res.send({ accessToken });
+    } else {
+      next(createHttpError(401, "Credentials are not ok!"));
+    }
+  } catch (error) {
     next(error);
   }
 });

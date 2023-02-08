@@ -108,6 +108,7 @@ filesRouter.get("/authorsCSV", async (req, res, next) => {
   try {
     res.setHeader("Content-Disposition", "attachment; filename=authors.csv");
     const source = getAuthorsAsReadableStream();
+    console.log(source);
     const transform = new json2csv.Transform({
       fields: ["firstName", "lastName", "email"],
     });

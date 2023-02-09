@@ -8,7 +8,7 @@ const authorsSchema = new Schema(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true },
-    password: { type: String, required: true },
+    password: { type: String, required: false },
     role: { type: String, enum: ["User", "Admin"], default: "User" },
     googleId: { type: String, required: false },
   },
@@ -36,7 +36,6 @@ authorsSchema.methods.toJSON = function () {
 
 authorsSchema.static("checkCredentials", async function (email, password) {
   const author = await this.findOne({ email });
-  console.log("Author:", author);
 
   if (author) {
     const passwordMatch = await bcrypt.compare(password, author.password);

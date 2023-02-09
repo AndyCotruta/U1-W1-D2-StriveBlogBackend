@@ -11,6 +11,7 @@ import { request } from "http";
 import q2m from "query-to-mongo";
 import { basicAuthMiddleware } from "../lib/basicAuth.js";
 import { adminOnlyMiddleware } from "../lib/adminOnly.js";
+import { JWTAuthMiddleware } from "../lib/jwtAuth.js";
 
 const blogsRouter = express.Router();
 
@@ -58,7 +59,7 @@ blogsRouter.post("/", basicAuthMiddleware, async (req, res, next) => {
 // 2. Read all blogs
 blogsRouter.get(
   "/",
-  basicAuthMiddleware,
+  JWTAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {

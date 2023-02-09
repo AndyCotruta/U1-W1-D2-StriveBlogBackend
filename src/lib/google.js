@@ -6,7 +6,7 @@ const googleStrategy = new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_SECRET,
-    callbackURL: `${process.env.BE_URL}/users/googleRedirect`, // this needs to match EXACTLY with the redirect URL you have configured on Google
+    callbackURL: `${process.env.BE_URL}/authors/googleRedirect`, // this needs to match EXACTLY with the redirect URL you have configured on Google
   },
   async (_, __, profile, passportNext) => {
     // This function is executed when Google sends us a successfull response

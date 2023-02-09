@@ -57,29 +57,22 @@ blogsRouter.post("/", basicAuthMiddleware, async (req, res, next) => {
 });
 
 // 2. Read all blogs
-blogsRouter.get(
-  "/",
-  JWTAuthMiddleware,
-  adminOnlyMiddleware,
-  async (req, res, next) => {
-    try {
-      const mongoQuery = q2m(req.query);
-      const { total, books } = await BlogsModel.findBlogsWithAuthors(
-        mongoQuery
-      );
-      const blogs = await BlogsModel.find();
-      res.send({
-        links: mongoQuery.links("http://localhost:3001/blogs", total),
-        total,
-        totalPages: Math.ceil(total / mongoQuery.options.limit),
-        blogs,
-      });
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
+blogsRouter.get("/", async (req, res, next) => {
+  try {
+    const mongoQuery = q2m(req.query);
+    const { total, books } = await BlogsModel.findBlogsWithAuthors(mongoQuery);
+    const blogs = await BlogsModel.find();
+    res.send({
+      links: mongoQuery.links("http://localhost:3001/blogs", total),
+      total,
+      totalPages: Math.ceil(total / mongoQuery.options.limit),
+      blogs,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-);
+});
 
 // 3. Read a blog by ID
 blogsRouter.get(

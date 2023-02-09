@@ -2,7 +2,7 @@ import express from "express";
 import fs from "fs";
 import AuthorsModel from "./model.js";
 import BlogsModel from "../blogs/model.js";
-
+import passport from "passport";
 import uniqid from "uniqid";
 import { getAuthors, writeAuthors } from "../lib/fs-tools.js";
 import { basicAuthMiddleware } from "../lib/basicAuth.js";
@@ -66,6 +66,23 @@ authorsRouter.delete("/me", basicAuthMiddleware, async (req, res, next) => {
     next(error);
   }
 });
+
+//.......................................... Google Login................................
+
+authorsRouter.get(
+  "/googleLogin",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+// The purpose of this endpoint is to redirect users to Google Consent Screen
+
+authorsRouter.get(
+  "/googleRedirect",
+  passport.authenticate("google", { session: false }),
+  async (req, res, next) => {
+    console.log(req.author);
+    res.redirect(`${process.env.FE_URL}?accessToken=${req.author.accessToken}`);
+  }
+);
 
 // 1. Create
 authorsRouter.post("/", async (req, res, next) => {

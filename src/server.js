@@ -13,6 +13,8 @@ import {
 import filesRouter from "./files/index.js";
 import { join, dirname } from "path";
 import mongoose from "mongoose";
+import passport from "passport";
+import googleStrategy from "./lib/google.js";
 
 const server = express();
 const port = process.env.PORT;
@@ -30,6 +32,8 @@ const corsOpts = {
     }
   },
 };
+
+passport.use("google", googleStrategy);
 
 server.use(cors(corsOpts));
 server.use(express.json());
